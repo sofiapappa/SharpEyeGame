@@ -1,0 +1,184 @@
+
+// In each level, it will present a bunch of numbers.
+// and the player has to guess the mean of those numbers.
+// The score is determined as follows:
+//	* If the player took more than five seconds, the score is zero.
+//	* Else, the score equals 10/e^-0.5x
+//  In each level, the numbers displayed will progress in difficulty
+
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <math.h>
+#include <vector>
+
+using namespace std;
+
+const size_t ROWS = 25, COLS = 100;
+
+void say_at(size_t row, size_t col, string text)
+{
+    cout << "\033[" << row << ";" << col << "H";
+    cout << text << flush;
+}
+
+void clear_screen()
+{
+    cout << "\033[2J" << flush;
+}
+
+void center_text_in_row(size_t row, string msg)
+{
+    // Determine the padding on either side of msg
+    size_t numspaces = COLS - msg.length();
+    say_at(row, numspaces / 2, msg);
+}
+
+void print_headers()
+{
+    center_text_in_row(4, "EENIE, MEANIE, MINEY, MOE");
+    center_text_in_row(5, "Guess the numbers' mean below");
+    center_text_in_row(6, "You've got five seconds to make it go.");
+}
+
+void update_scores(float score, float total_score)
+{
+    string score_text = "SCORE: " + to_string(score);
+    string total_score_text = "TOTAL SCORE: " + to_string(total_score);
+    say_at(1, 80, score_text);
+    say_at(2, 80, total_score_text);
+}
+
+// play_level_0 will present the user with the level 0 screen and return
+// their score to the caller
+float play_level_0()
+{
+    size_t n1 = rand() % 1000;
+    size_t n2 = rand() % 1000;
+
+    // show the two numbers on line 5 with text centered and ask them to guess
+    // research for reddit
+    ostringstream oss;
+    oss << "Your numbers are: " << setw(3) << setfill('0') << n1 << " " << n2;
+    center_text_in_row(7, oss.str());
+
+    float mean = ((float)n1 + n2) / 2.0;
+    unsigned ts1 = time();
+    center_text_in_row(10, "Guess the mean of the above numbers within 5 seconds: ");
+
+    float guessed_mean;
+    cin >> guessed_mean;
+
+    unsigned ts2 = time();
+    if (ts2 - ts1 > 5)
+    { // Response took longer than 5 seconds
+        center_text_in_row(12, "Sorry, you took longer than 5 seconds!");
+        return 0;
+    }
+    float abs_diff = fabs(double(guessed_mean - mean) / 500.0);
+    float score = 10 / exp(0.5 * abs_diff);
+
+    if (score < 1)
+    {
+        center_text_in_row(12, "Sorry, you guessed " + to_string(guessed_mean) + " but the actual mean was " + to_string(mean));
+        return 0;
+    }
+    center_text_in_row(12, "Hooray, you got it!");
+    return score;
+}
+
+// Same as level 0 except 9 numbers presented in a 3x3 matrix
+float play_level_2()
+{
+    size_t n1 = rand() % 1000;
+    size_t n2 = rand() % 1000;
+    // Find out what the difference between using vectors and arrays are
+    vector<size_t> nums(9); // An array of 9 numbers
+
+    // fill the vector with 9 random numbers
+    float total = 0.0;
+    for (size_t i = 0; i < nums.size(); i++)
+    {
+        nums[i] = rand() % 1000;
+        total += nums[i];
+    }
+    float mean = total / nums.size();
+
+    ostringstream oss;
+    for (size_t i = 0; i < nums.size(); i++)
+    {
+        oss << setw(3) << setfill('0') << nums[i] << " ";
+        if ((i + 1) % 3 == 0)
+            oss << "\n";
+    }
+    say_at(7, 0, "Your numbers are:\n" + oss.str());
+
+    // center_text_in_row(7, oss.str());
+
+    float mean = ((float)n1 + n2) / 2.0;
+    unsigned ts1 = time(nullptr);
+    center_text_in_row(10, "Guess the mean of the above numbers within 5 seconds: ");
+
+    float guessed_mean;
+    cin >> guessed_mean;
+
+    unsigned ts2 = time(nullptr);
+    if (ts2 - ts1 > 5)
+    { // Response took longer than 5 seconds
+        center_text_in_row(12, "Sorry, you took longer than 5 seconds!");
+        return 0;
+    }
+    float abs_diff = fabs(double(guessed_mean - mean) / 500.0);
+    float score = 10 / exp(0.5 * abs_diff);
+
+    if (score < 1)
+    {
+        center_text_in_row(12, "Sorry, you guessed " + to_string(guessed_mean) + " but the actual mean was " + to_string(mean));
+        return 0;
+    }
+    center_text_in_row(12, "Hooray, you got it!");
+    return score;
+}
+
+int main()
+{
+    srand((unsigned)time(nullptr)); // Seed the random generator.
+
+    // main() is going to call different play_level functions which will each
+    // return the score of the player on completing that level.
+    // If the score is 0 at any point or if max level has been reached,
+    // main() will break out of the loop.
+    size_t level = 0, max_level = 3;
+    float score = 0, total_score = 0;
+
+    clear_screen();
+    print_headers();
+
+    while (level <= max_level)
+    {
+        say_at(1, 0, "LEVEL: " + to_string(level));
+
+        switch (level)
+        {
+        case 0:
+            score = play_level_0(); // 2 numbers in one line.
+            break;
+        // case 1:
+        //    score = play_level_1(); // 3 numbers in one line.
+        //    break;
+        case 2:
+            score = play_level_2(); // 9 numbers in a 3x3 matrix.
+            break;
+        default:
+            cout << "No more levels until CS2A students come up with them...";
+        }
+        if (score == 0)
+        {
+            cout << "Sorry! You didn't clear the previous level." << endl;
+            exit(0)
+        }
+
+        total_score += score;
+        update_scores(score, total_score);
+    }
+}

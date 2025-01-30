@@ -7,14 +7,55 @@
 //  In each level, the numbers displayed will progress in difficulty
 
 #include <iostream>
-#include <sstream>
+#include <sstream> //for ostringstream
 #include <iomanip>
 #include <math.h>
 #include <vector>
+#include <chrono> //for sleep
+#include <thread>
 
 using namespace std;
 
 const size_t ROWS = 25, COLS = 100;
+
+enum Color
+{
+    base = 0,
+    black = 30,
+    red,
+    green,
+    yellow,
+    blue,
+    magneta,
+    cyan,
+    white
+
+};
+
+enum BgColor
+{
+    bg_base = 0,
+    bg_black = 40,
+    bg_red,
+    bg_green,
+    bg_yellow,
+    bg_blue,
+    bg_magenta,
+    bg_cyan,
+    bg_white
+};
+void set_color(int text_color)
+{
+    // changes color using ansi numbers
+    cout << "\033[" << text_color << "m";
+}
+
+void set_bg_color(BgColor bg_color, Color color)
+{
+    cout << "\033[" << bg_color << ";" << color << "m";
+}
+
+void reset_color() { cout << "\033[0m"; }
 
 void say_at(size_t row, size_t col, string text)
 {
@@ -36,8 +77,11 @@ void center_text_in_row(size_t row, string msg)
 
 void print_headers()
 {
+    set_bg_color(bg_base, yellow);
     center_text_in_row(4, "EENIE, MEANIE, MINEY, MOE");
+    set_bg_color(bg_base, green);
     center_text_in_row(5, "Guess the numbers' mean below");
+    set_bg_color(bg_base, blue);
     center_text_in_row(6, "You've got five seconds to make it go.");
 }
 
@@ -45,8 +89,57 @@ void update_scores(float score, float total_score)
 {
     string score_text = "SCORE: " + to_string(score);
     string total_score_text = "TOTAL SCORE: " + to_string(total_score);
+    set_bg_color(bg_base, yellow);
     say_at(1, 80, score_text);
     say_at(2, 80, total_score_text);
+    reset_color();
+}
+
+double generate_rand_nums(vector<size_t> &nums)
+{
+    double total = 0.0;
+
+    // Get total of all nums in vector
+    for (size_t i = 0; i < nums.size(); i++)
+    {
+        // nums[i] = 100; // For testing purposes
+        nums[i] = rand() % 1000;
+        total += nums[i];
+    }
+
+    return total;
+}
+
+void display_num(vector<size_t> nums)
+{
+    ostringstream oss; // Create an output string stream
+    size_t row = 8;
+
+    set_bg_color(bg_base, red);
+    center_text_in_row(7, "Your numbers are: ");
+
+    set_bg_color(bg_red, white);
+    for (size_t i = 0; i < nums.size(); i++)
+    {
+        oss << " ";
+        oss << setw(3) << setfill('0') << nums[i];
+        oss << " ";
+
+        // For levels 2 and up that use matrices
+        if (nums.size() > 3 && (i + 1) % 3 == 0)
+        {
+            center_text_in_row(row, oss.str());
+            oss.str("");
+            oss.clear();
+            row++;
+        }
+    }
+
+    // For levels 0 and 1
+    if (nums.size() < 4)
+        center_text_in_row(row, oss.str());
+
+    reset_color();
 }
 
 // play_level_0 will present the user with the level 0 screen and return
@@ -112,8 +205,6 @@ float play_level_2()
             oss << "\n";
     }
     say_at(7, 0, "Your numbers are:\n" + oss.str());
-
-    // center_text_in_row(7, oss.str());
 
     float mean = ((float)n1 + n2) / 2.0;
     unsigned ts1 = time(nullptr);

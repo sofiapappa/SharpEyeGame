@@ -129,13 +129,6 @@ void display_num(vector<size_t> nums)
     reset_color();
 }
 
-string formatDouble(double value, int precision = 2)
-{
-    ostringstream oss;
-    oss << fixed << setprecision(precision) << value;
-    return oss.str();
-}
-
 float play(int level, float level_score, float total_score)
 {
     int max_level = 4;
@@ -195,8 +188,8 @@ float play(int level, float level_score, float total_score)
     float abs_diff = fabs(double(guessed_mean - mean) / 500.0);
     float score = 10 / exp(0.5 * abs_diff);
 
-    center_text_in_row(12, "You guessed " + formatDouble(guessed_mean) + ". The mean was " + formatDouble(mean));
-    center_text_in_row(13, "You earned " + formatDouble(score) + " points");
+    center_text_in_row(12, "You guessed " + to_string(guessed_mean) + ". The mean was " + to_string(mean));
+    center_text_in_row(13, "You earned " + to_string(score) + " points");
     total_score += score;
 
     if (score < 0.1)

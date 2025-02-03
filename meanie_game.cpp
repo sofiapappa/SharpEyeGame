@@ -15,10 +15,31 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <map>
+#include<random>
 
 using namespace std;
 
+// Constants
 const size_t ROWS = 25, COLS = 100;
+const int MAX_LEVELS = 4;
+const int TIME_LIMIT = 5;
+const int MAX_NUMBER = 1000;
+
+// Random number generator setup: variable declarations & initializations
+std::random_device rd; // generates a random seed
+std::mt19937 rng(rd()); // seed the  pseudo-random number generator (PRNG) with a truly random value
+
+// Function to generate random numbers
+std::vector<int> generateNumbers(int count) {
+    std::uniform_int_distribution<int> dist(0, MAX_NUMBER); 
+    std::vector<int> numbers(count);
+
+    for (auto& num : numbers){ // num is a reference to each element
+        num = dist(rng); //dist takes that random seed and maps it to a number between 1 and 100 uniformly
+    }
+
+    return numbers;
+}
 
 enum Color
 {
